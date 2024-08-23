@@ -41,7 +41,7 @@ def verifica_solucao(estado):
 
 
 def busca_amplitude(estado_ini, operacoes, max_niveis):
-    quantidade_estados = 0
+    quant_estados = 0
     folhas = []
     novas_folhas = []
     raiz = {"estado": estado_ini, "caminho": []}
@@ -53,36 +53,83 @@ def busca_amplitude(estado_ini, operacoes, max_niveis):
         for folha in folhas:
             for op in operacoes:
                 estado = aplica_operacao(folha["estado"], op)
-                quantidade_estados += 1
+                quant_estados += 1
                 nova_folha = {"estado": estado,
                               "caminho": folha["caminho"]+[op]}
                 novas_folhas.append(nova_folha)
                 if verifica_solucao(nova_folha["estado"]) == True:
-                    return {'estado': nova_folha["estado"], 'caminho': nova_folha["caminho"], 'quantidade de estados': quantidade_estados}
+                    return {"estado": nova_folha["estado"],
+                            "caminho": nova_folha["caminho"],
+                            "quant_estados": quant_estados}
         folhas = novas_folhas
     return None
 
 
+def calc_c(folha):
+    return len(folha["caminho"])
+
+
+def calc_h(folha):
+    h = 0
+    i = 0
+    for linha in folha["estado"]:
+        for elemento in linha:
+            if elemento != i and i != 0:
+                h = h+1
+            i = i+1
+    return h
+
+
+def busca_a_estrela(estado_ini, operacoes, max_niveis):
+    quant_estados = 0
+    folhas = []
+    novas_folhas = []
+    raiz = {"estado": estado_ini, "caminho": [], "f": 0}
+    folhas.append(raiz)
+    niveis = 0
+    while (niveis < max_niveis):
+        niveis = niveis+1
+        melhor_folha = folhas[0]
+        # ----escolhe a melhor folha
+        for folha in folhas:
+            if folha["f"] < melhor_folha["f"]:
+                melhor_folha = folha
+        # ---------------------------
+        folhas.remove(melhor_folha)
+        for op in operacoes:
+            estado = aplica_operacao(melhor_folha["estado"], op)
+            quant_estados += 1
+            nova_folha = {"estado": estado,
+                          "caminho": melhor_folha["caminho"]+[op], "f": 0}
+            f = calc_c(nova_folha)+calc_h(nova_folha)
+            nova_folha["f"] = f
+            folhas.append(nova_folha)
+            if verifica_solucao(nova_folha["estado"]) == True:
+                return {"estado": nova_folha["estado"],
+                        "caminho": nova_folha["caminho"],
+                        "quant_estados": quant_estados}
+    return None
+
+
 qc = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-ops = ['d', 'b', 'd', 'c', 'e', 'e', 'b', 'd', 'c', 'e', 'b']
+ops = ["d", "d", "b"]
 for op in ops:
     qc = aplica_operacao(qc, op)
-
-qc = aplica_operacao(qc, "d")
-qc = aplica_operacao(qc, "b")
 print("estado inicial:")
 mostra_qc(qc)
 operacoes = ["b", "c", "d", "e"]
-max_niveis = 100
-res = busca_amplitude(qc, operacoes, max_niveis)
+max_niveis = 100000
+res = busca_a_estrela(qc, operacoes, max_niveis)
+
 if res != None:
     for k in res:
         print(k, res[k])
-        print("estado inicial:")
+    print("\n")
+    print("estado inicial:")
+    mostra_qc(qc)
+    for op in res["caminho"]:
+        qc = aplica_operacao(qc, op)
+        print(op)
         mostra_qc(qc)
-        for op in res["caminho"]:
-            qc = aplica_operacao(qc, op)
-            print(op)
-            mostra_qc(qc)
 else:
-    print('não encontrou a solução')
+    print("Não encontrou a solução")
