@@ -1,0 +1,5 @@
+gato = np.array([[7.5, 24, 0]]) - siamês
+gato = np.array([[5.0, 25, 1]]) - chartreux
+gato = np.array([[9.5, 85, 3]]) - siberiano
+gato = np.array([[4.0, 20, 1]]) - chartreux
+gato = np.array([[10.0, 30, 3]]) - siberiano

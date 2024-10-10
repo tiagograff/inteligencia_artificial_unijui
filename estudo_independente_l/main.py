@@ -1,102 +1,46 @@
-numero_alvo = 51
-intervalo_inicial = (1, 100)
+# Importar as bibliotecas necessárias
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+from sklearn import tree
+import matplotlib.pyplot as plt
 
-
-def aplica_operacao(estado, operacao):
-    intervalo = estado["intervalo"]
-    palpite_atual = estado["palpite"]
-
-    if operacao == "menor":
-        novo_intervalo = (intervalo[0], palpite_atual - 1)
-    elif operacao == "maior":
-        novo_intervalo = (palpite_atual + 1, intervalo[1])
-
-    novo_palpite = (novo_intervalo[0] + novo_intervalo[1]) // 2
-
-    novo_estado = {
-        "intervalo": novo_intervalo,
-        "palpite": novo_palpite,
-
-        "tentativas": estado["tentativas"] + [palpite_atual],
-
-        "quantidade_tentativas": estado["quantidade_tentativas"] + 1,
-
-        "operacoes": estado["operacoes"] + [(palpite_atual, operacao)]
-    }
-    return novo_estado
-
-
-def get_ops_validas(estado):
-    ops_validas = []
-    intervalo = estado["intervalo"]
-    palpite = estado["palpite"]
-
-    if palpite > intervalo[0]:
-        ops_validas.append("menor")
-    if palpite < intervalo[1]:
-        ops_validas.append("maior")
-
-    return ops_validas
-
-
-def verifica_solucao(estado):
-    return estado["palpite"] == numero_alvo
-
-
-def busca_a_estrela(estado_ini, max_niveis):
-    folhas = []
-    raiz = {
-        "estado": estado_ini,
-        "ops": [],
-        "f": 0
-    }
-
-    folhas.append(raiz)
-    niveis = 0
-
-    while niveis < max_niveis:
-        niveis += 1
-        melhor_folha = folhas[0]
-
-        for folha in folhas:
-            if folha["f"] < melhor_folha["f"]:
-                melhor_folha = folha
-
-        folhas.remove(melhor_folha)
-        operacoes = get_ops_validas(melhor_folha["estado"])
-
-        for op in operacoes:
-            estado = aplica_operacao(melhor_folha["estado"], op)
-
-            nova_folha = {
-                "estado": estado,
-                "ops": melhor_folha["ops"] + [op],
-                "f": 0
-            }
-            f = estado["quantidade_tentativas"]
-            nova_folha["f"] = f
-            folhas.append(nova_folha)
-
-            if verifica_solucao(nova_folha["estado"]):
-                return nova_folha["estado"], nova_folha["ops"]
-
-    return None
-
-
-estado_ini = {
-    "intervalo": intervalo_inicial,
-    "palpite": (intervalo_inicial[0] + intervalo_inicial[1]) // 2,
-    "tentativas": [],
-    "quantidade_tentativas": 0,
-    "operacoes": []  #
+data = {
+    'peso': [8.0, 8.2, 7.8, 4.5, 6.0, 7.0, 9.0, 9.2],
+    'comprimento': [20, 25, 30, 22, 28, 30, 90, 88],
+    'pelagem': [0, 0, 0, 1, 1, 1, 3, 3],
+    'raça': [0, 0, 0, 1, 1, 1, 2, 2]
 }
 
-max_niveis = 100
-estado, ops = busca_a_estrela(estado_ini, max_niveis)
+df = pd.DataFrame(data)
 
-print(f'\npalpite final: {estado["palpite"]}')
-print(f'\noperações: {ops}')
-print(f'\nquantidade de tentativas: {estado["quantidade_tentativas"]}')
-print('\n-- palpites e operações registradas --\n')
-for palpite, operacao in estado["operacoes"]:
-    print(f'palpite: {palpite}, operação: {operacao}')
+# separar em caracteristicas e raças
+X = df[['peso', 'comprimento', 'pelagem']]
+y = df['raça']
+
+# função que dividi um conjunto de dados, em um subconjunto. para avaliar o desempenho
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42)
+
+# cria a árvore de decisão
+clf = DecisionTreeClassifier()
+# função para treinamento
+clf.fit(X_train, y_train)
+# função para previsões
+y_pred = clf.predict(X_test)
+# função para calcular a acurácia
+accuracy = accuracy_score(y_test, y_pred)
+print(f'acurácia: {accuracy * 100:.2f}%')
+# exibindo a árvore de decisão
+plt.figure(figsize=(8, 6))
+tree.plot_tree(clf, feature_names=['peso', 'comprimento', 'pelagem'], class_names=[
+               'siamês', 'chartreux', 'siberiano'], filled=True, rounded=True, fontsize=10)
+plt.show()
+
+# exemplo
+gato = np.array([[10.0, 30, 3]])
+predicao = clf.predict(gato)
+racas = ['siamês', 'chartreux', 'siberiano']
+print(f'a raça prevista para o gato é: {racas[predicao[0]]}')
